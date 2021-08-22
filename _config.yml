@@ -29,14 +29,14 @@ exclude:
 
 # Optimize Jekyl SEO Tag
 twitter:
-  username: vszhub
+  username: wodingdong
   card: summary
 logo: logo.png
 social:
-  name: Songzi Vong
+  name: Guidong Lv
   links:
-    - https://twitter.com/vszhub
-    - https://github.com/vszhub
+    - https://twitter.com/wodingdongdong
+    - https://github.com/lvguidong
 google_site_verification: xxxxx
 lang: en
 
@@ -54,6 +54,6 @@ sass:
 
 # Specify the author for blog posts
 author:
-  name: Songzi Vong
-  url: https://github.com/vszhub/
-  email: vszhub@gmail.com
+  name: Guidong Lv
+  url: https://github.com/lvguidong/
+  email: lvguidong1@gmail.com
