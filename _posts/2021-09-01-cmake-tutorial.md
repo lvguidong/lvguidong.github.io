@@ -1,3 +1,10 @@
+---
+layout: post
+title: CMake Tutorial
+tags: c
+date: 2021-09-01 20:32 +0800
+---
+
 # Tutorial
 
 > The CMake tutorial provides a step-by-step guide that covers common build system issues that CMake helps address. Seeing how various topics all work together in an example project can be very helpful. The tutorial documentation and source code for examples can be found in the `Help/guide/tutorial` directory of the CMake source code tree. Each step has its own subdirectory containing code that may be used as a starting point. The tutorial examples are progressive so that each step provides the complete solution for the previous step.
