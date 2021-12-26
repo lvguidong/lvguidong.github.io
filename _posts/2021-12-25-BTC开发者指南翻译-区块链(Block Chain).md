@@ -5,7 +5,7 @@ tags:
 - 区块链
 - BlockChain
 - BTC
-date: 2021-12-25 16:00 +0800
+date: 2021-12-25 16:01 +0800
 ---
 翻译原文在 [**这里**](https://developer.bitcoin.org/devguide/block_chain.html)
 
@@ -69,7 +69,65 @@ date: 2021-12-25 16:00 +0800
 由于在区块链分叉过程中多个区块可以具有相同的高度(same height)，因此不应将区块高度用作全局唯一标识符。相反，块通常由其标头的哈希值引用（通常字节倒序，并以十六进制表示）
 
 # 交易数据(Transaction Data)
+每个区块必须包含一个或多个交易(one or more transactions)。这些交易中的第一个必须是 `coinbase 交易`，也称为`generation交易`，它应该收集和花费区块奖励（包括区块补贴(block subsidy)和该区块中包含的交易支付的任何交易费用）。
 
+`coinbase 交易`的 UTXO 有一个特殊条件，即它至少在100 个块内不能被花费（用作输入）。这暂时阻止了矿工在区块链分叉后花费交易费用和区块奖励，该区块可能稍后被确定为陈旧块（因此 coinbase 交易被破坏）。
 
+区块不需要包含任何非 coinbase 交易，但矿工几乎总是包含额外的交易以收取他们的交易费用(transaction fees)。
 
+所有交易，包括 coinbase 交易，都以二进制原始交易格式(binary raw transaction format)编码到块中。
 
+原始交易格式经过哈希处理以创建交易标识符 (txid)。从这些 txid 中，通过将每个 txid 与另一个 txid 配对(pairing)，然后将它们哈希在一起来构建默克尔树。如果有奇数(odd)个 txid，则没有配对(without a partner)的 txid 会与其自身的副本(copy of itself)一起哈希。
+
+将得到的哈希值再一一配对进行哈希。任何没有配对的将与自己进行哈希。重复这个过程，直到只剩下一个哈希值，即默克尔根(merkle root)。
+
+例如，如果交易只是连接（未哈希），拥有5个交易的默克尔树将如下图所示：
+```
+       ABCDEEEE .......Merkle root
+      /        \
+   ABCD        EEEE
+  /    \      /
+ AB    CD    EE .......E 与自己配对
+/  \  /  \  /
+A  B  C  D  E .........5个交易
+```
+
+正如在简化支付验证 (SPV) 小节中讨论的那样，默克尔树允许客户端通过从区块头获取默克尔根和来自完整对等方的中间哈希列表来自行验证交易是否包含在区块中。全节点不需要被信任(trusted)：伪造区块头(fake blocker headers)的成本很高，中间哈希不能伪造，否则验证将失败(verification will fail)。
+
+例如，要验证交易 D 是否已添加到区块中，除了默克尔根之外，SPV 客户端只需要 `C`、`AB` 和 `EEEE` 哈希的副本(copy)；客户端不需要知道任何其他交易的任何信息。如果这个区块中的五个交易都是最大上限(maximum size)，下载整个区块将需要超过 500,000 字节——但下载三个哈希加上区块头只需要 140 字节。
+
+> 注意：如果在同一个区块中发现相同的 txid，由于实现不平衡的默克尔树（复制单独的哈希），默克尔树可能会与删除了部分或全部重复项的区块发生碰撞(collide)。由于使用相同的 txid 进行单独的交易是不切实际的，这不会给诚实的软件带来负担，但必须检查是否要缓存块(cached)的无效状态(invalid status)；否则，消除重复的有效块可能具有相同的默克尔根和块哈希，但会被缓存的无效结果拒绝，从而导致安全漏洞，例如 [CVE-2012-2459](https://en.bitcoin.it/wiki/Common_Vulnerabilities_and_Exposures#CVE-2012-2459)
+
+# 共识规则的变更(Consensus Rule Changes)
+为了保持共识(maintain consensus)，所有全节点使用相同的共识规则验证块。但是，有时会更改共识规则以引入新功能(new features)或防止网络滥用(prevent network abuse)。当新规则实施时，可能会有一段时间未升级的节点遵循旧规则，升级的节点遵循新规则，从而产生两种可能的共识破坏方式：
+
+- 遵循新共识规则的区块被升级的节点接受(accepted)，但被未升级的节点拒绝(rejected)。例如，在一个区块中使用了一个新的交易特性：升级的节点理解该特性并接受它，但未升级的节点拒绝它，因为它违反了旧规则(old rules)。
+- 违反新共识规则的区块被升级的节点拒绝，但被未升级的节点接受。例如，在一个区块中使用了一个滥用交易特征：升级的节点因为它违反了新规则而拒绝它，但未升级的节点因为它遵循旧规则而接受它。
+  
+在第一种情况下，被未升级节点拒绝，从那些未升级节点获取区块链数据的挖矿软件拒绝建立在与从升级节点获取数据的挖矿软件相同的链上。这会创建永久分叉的链(permanently divergent chins)——一个用于未升级的节点，一个用于升级的节点——称为硬分叉(hard fork)。
+
+<img src="https://developer.bitcoin.org/_images/en-hard-fork.svg" alt="btc fork" />
+
+在第二种情况下，被升级的节点拒绝，如果升级的节点控制了大部分哈希率，则可以防止区块链永久分叉(permanently diverging)。这是因为，在这种情况下，未升级节点将接受所有与升级节点相同的区块作为有效区块，因此升级节点可以构建一条健壮(stronger)的链，未升级节点将接受该区块链作为最佳有效区块链。这称为软分叉(soft fork)。
+<img src="https://developer.bitcoin.org/_images/en-soft-fork.svg" alt="btc fork" />
+
+尽管分叉是区块链中的实在分歧，但共识规则的变化通常被描述为它们可能会创建硬分叉或软分叉。例如，“将块大小增加到 1 MB 以上需要硬分叉。”在这个例子中，链的分叉并不是一定需要，但这是一个可能的结果。
+
+可以以各种方式激活共识规则更改。在比特币的头两年，中本聪通过在立即开始执行新规则的客户端中发布向后兼容的更改来执行几次软分叉。多个软分叉如 [BIP30](https://github.com/bitcoin/bips/blob/master/bip-0030.mediawiki) 已通过标志日激活，新规则在预设时间或区块高度开始执行。这种通过标志日激活的分叉被称为用户激活软分叉（User Activated Soft Forks-UASF），因为它们依赖于在标志日之后有足够的用户（节点）来执行新规则。
+
+后来的软分叉等待大多数哈希率(hash rate)（通常为 75% 或 95%）来表示他们已准备好执行新的共识规则。一旦超过阈值，所有节点将开始执行新规则。这种分叉被称为矿工激活软分叉（Miner Activated Soft Forks-`MASF`），因为它们依赖于矿工进行激活。
+
+资源：[BIP16](https://github.com/bitcoin/bips/blob/master/bip-0016.mediawiki)、[BIP30](https://github.com/bitcoin/bips/blob/master/bip-0030.mediawiki) 和 [BIP34] 已作为可能导致软分叉的更改实施。 [BIP50](https://github.com/bitcoin/bips/blob/master/bip-0050.mediawiki) 描述了通过临时降级升级节点的功能解决的意外硬分叉，以及临时降级被删除时的故意硬分叉。 Gavin Andresen 的一份文件概述了[如何实施未来的规则变更](https://gist.github.com/gavinandresen/2355445)。
+
+# 检测分叉(Detecting Forks)
+未升级的节点可能会在两种类型的分叉期间使用和分发不正确的信息，从而产生多种可能导致经济损失的情况。特别是，未升级的节点可能会中继和接受升级节点认为无效的交易，因此永远不会成为公认的最佳区块链的一部分。未升级的节点也可能拒绝中继已经或即将添加到最佳区块链的区块或交易，从而提供不完整的信息。
+
+Bitcoin Core 包含通过查看区块链工作量证明来检测硬分叉的代码。如果未升级的节点收到区块链标头，表明比它认为有效的最佳链至少多出六个区块的工作量证明，则该节点会在[“getnetworkinfo”RPC](https://developer.bitcoin.org/reference/rpc/getnetworkinfo.html) 结果中报告警告，并在设置时运行 `-alertnotify` 命令。这警告操作员未升级的节点无法切换到可能是最好的区块链。
+
+全节点还可以检查区块(block)和交易版本号(transaction version numbers)。如果在最近几个区块中看到的区块或交易版本号高于节点使用的版本号，则可以假设它没有使用当前的共识规则。 Bitcoin Core 通过[“getnetworkinfo”RPC](https://developer.bitcoin.org/reference/rpc/getnetworkinfo.html) 和 `-alertnotify` 命令（如果设置）报告这种情况。
+
+在任何一种情况下，如果区块和交易数据来自显然没有使用当前共识规则的节点，则不应依赖这些数据。
+
+连接到完整节点的 SPV 客户端可以通过连接到多个完整节点并确保它们都在具有相同块高度的同一链上，加上或减去几个块以解决传输延迟和陈旧块，从而检测可能的硬分叉。如果出现分歧(divergence)，客户端可以与具有较弱链(weak chains)的节点断开连接。
+
+SPV 客户端还应监控区块和交易版本号的增加，以确保他们处理收到的交易并使用当前的共识规则创建新交易。
