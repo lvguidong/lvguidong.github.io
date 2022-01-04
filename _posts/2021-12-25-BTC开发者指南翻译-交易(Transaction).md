@@ -11,8 +11,9 @@ date: 2021-12-25 16:02 +0800
 
 翻译原文在 [**这里**](https://developer.bitcoin.org/devguide/transactions.html)
 
-
 交易让用户花费聪(satoshis)。每个交易都是由几个部分构建的，这使得简单直接支付和复杂的交易成为可能。
+
+
 
 # 介绍(Introduction)
 ​	本节将描述每个部分并演示如何将它们一起使用，以构建完整的交易。
@@ -57,5 +58,8 @@ Bob的SECP256K1签名不仅仅是Bob控制他的私钥;它还使其交易篡改�
 
 在签名脚本中签名和公钥后，Bob通过点对点网络(peer-to-peer network)将交易广播到比特币矿工。每个节点和矿工在广播之前独立地验证交易，进一步或尝试将其包含在新的交易块中。
 
+
+
 # P2PKH 脚本验证(P2PKH Script Validation)
 
+​	
