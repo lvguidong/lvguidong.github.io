@@ -8,13 +8,7 @@ tags:
 date: 2021-12-25 16:02 +0800
 ---
 
-​	
-
-​		翻译原文在 [**这里**](https://developer.bitcoin.org/devguide/transactions.html) 
-
-​		交易让用户花费聪(satoshis)。每个交易都是由几个部分构建的，这使得简单直接支付和复杂的交易成为可能。
-
-
+翻译原文在 [**这里**](https://developer.bitcoin.org/devguide/transactions.html) ,交易让用户花费聪(satoshis)。每个交易都是由几个部分构建的，这使得简单直接支付和复杂的交易成为可能。
 
 # 介绍(Introduction)
 ​	本节将描述每个部分并演示如何将它们一起使用，以构建完整的交易。

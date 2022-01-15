@@ -7,14 +7,10 @@ tags:
 - BTC
 date: 2021-12-25 16:01 +0800
 ---
-​		
-
-​	翻译原文在 [**这里**](https://developer.bitcoin.org/devguide/block_chain.html)
-
-
+翻译原文在 [**这里**](https://developer.bitcoin.org/devguide/block_chain.html) 
 
 # 区块链(Block Chain)
-​		区块链提供了比特币的公共账本(ledger)，一个有序的(ordered)、带有时间戳的(timestamped)交易记录。该系统用于防止双重支付(double spending)和修改以前的交易记录
+​	区块链提供了比特币的公共账本(ledger)，一个有序的(ordered)、带有时间戳的(timestamped)交易记录。该系统用于防止双重支付(double spending)和修改以前的交易记录
 
 
 
