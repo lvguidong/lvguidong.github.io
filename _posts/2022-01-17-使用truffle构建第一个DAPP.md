@@ -16,11 +16,11 @@ date: 2022-01-17 08:12 +0800
 
   1. 安装 truffle
 
-     ```
-     npm install -g truffle
-     ```
+ ```
+ npm install -g truffle
+ ```
 
-     相关版本如下:
+相关版本如下:
 
 ```
 dong@DESKTOP-KS722GA:/mnt/g/dong/coin/eth/metabox$ truffle version
